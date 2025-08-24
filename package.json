@@ -9,7 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@daveyplate/next-rate-limit": "^2.0.1",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
     "framer-motion": "^12.23.12",
+    "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0",
     "next": "15.5.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
