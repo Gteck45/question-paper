@@ -270,7 +270,7 @@ export default function Dashboard() {
                                     <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
                                         Active
                                     </span>
-                                    <button className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">
+                                    <button className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer" onClick={()=>{location.href=`/question-paper/edit/${project.projectId}`}}>
                                         Open →
                                     </button>
                                 </div>
