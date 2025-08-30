@@ -1,0 +1,80 @@
+[
+    {
+        "headers": [
+            {
+                "courseName": "name",
+                "styles": [
+                    "font-bold",
+                    "font-size"
+                ]
+            },
+            {
+                "examinationType": "type",
+                "styles": [
+                    "font-bold",
+                    "font-size"
+                ]
+            },
+            {
+                "semesterYear": "Year",
+                "styles": [
+                    "font-bold",
+                    "font-size"
+                ]
+            },
+            {
+                "subjectName": "name",
+                "styles": [
+                    "font-bold",
+                    "font-size"
+                ]
+            },
+            {
+                "totalMarks": 20,
+                "styles": [
+                    "font-bold",
+                    "text-2xl"
+                ]
+            },
+            {
+                "time": "",
+                "styles": [
+                    "font-bold",
+                    "text-2xl"
+                ]
+            },
+            {
+                "notes": "this is example",
+                "styles": [
+                    "font-bold",
+                    "text-2xl"
+                ]
+            }
+        ],
+   
+    "questions": [
+            {
+                "index": 1,
+                "styles": [
+                    "font-bold",
+                    "text-[20px]"
+                ],
+                "text": "welcome to this chapter",
+                "marks": 20,
+                "options": [
+                    {
+                        "index": 1,
+                        "styles": [
+                            "font-bold",
+                            "text-[20px]"
+                        ],
+                        "text": "welcome to this chapter",
+                        "options": [
+                            {}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

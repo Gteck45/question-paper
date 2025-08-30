@@ -1,6 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from 'react-hot-toast';
+import localFont from 'next/font/local';
 import "./globals.css";
-import AllProvider from "./store/all"
+import AllProvider from "./store/all";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -9,6 +12,10 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const roboto = localFont({
+  src: './fonts/Roboto-Regular.ttf',
 });
 
 export const metadata = {
@@ -20,9 +27,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        // ✅ Add the roboto.className here to apply the font
+        className={`${roboto.className} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AllProvider>
+          <Toaster position="top-center" reverseOrder={false} />
           {children}
         </AllProvider>
       </body>
