@@ -2,9 +2,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import Link from "next/link"
-import { useAuth } from "../store/authContext"
-import { useNavigation } from "../store/navigationContext"
-import AuthGuard from "../component/AuthGuard"
+import { useAll } from "../store/all"
 import { useRouter } from "next/navigation"
 
 export default function Login() {
@@ -12,8 +10,7 @@ export default function Login() {
     const [message, setMessage] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
-    const { login, redirectIfAuthenticated } = useAuth()
-    const { goToDashboard } = useNavigation()
+    const { logstate, setLogstate, user, setUser } = useAll()
     const router = useRouter()
 
     const handleedit = (e) => {
@@ -28,14 +25,12 @@ export default function Login() {
         setMessage("")
         
         try {
-            const result = await login(logform)
-            if (result.success) {
-                goToDashboard()
-            } else {
-                setMessage(result.message)
-            }
+            const response = await axios.post("/api/login", logform)
+            setLogstate(true)
+            router.push("/dashboard")
+            setMessage(response.data.message)
         } catch (error) {
-            setMessage("Login failed. Please try again.")
+            setMessage(error.response?.data?.message || "Login failed. Please try again.")
         } finally {
             setIsLoading(false)
         }
@@ -46,12 +41,13 @@ export default function Login() {
     }
 
     useEffect(() => {
-        // This is now handled by AuthGuard
-    }, [])
+        if (logstate) {
+            router.push("/dashboard")
+        }
+    }, [logstate, router])
 
     return (
-        <AuthGuard redirectIfAuth={true}>
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 flex items-center justify-center p-4">
             {/* Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
@@ -250,6 +246,5 @@ export default function Login() {
                 </div>
             </div>
         </div>
-        </AuthGuard>
     )
 }

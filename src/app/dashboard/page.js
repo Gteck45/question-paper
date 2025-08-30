@@ -1,6 +1,10 @@
-"use client"
+﻿"use client"
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useAuth } from "../store/authContext";
+import { useNavigation } from "../store/navigationContext";
+import AuthGuard from "../component/AuthGuard";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
     const [projects, setProjects] = useState([]);
@@ -10,8 +14,12 @@ export default function Dashboard() {
     const [renameState, setRenameState] = useState(false);
     const [renameProjectId, setRenameProjectId] = useState(null);
     const [renameProjectName, setRenameProjectName] = useState("");
+    const { user, isLoggedIn, requireAuth } = useAuth();
+    const { goToLogin, goToProject } = useNavigation();
+    const router = useRouter();
 
     useEffect(() => {
+        // Auth is handled by AuthGuard, just fetch projects
         const fetchProjects = async () => {
             const response = await fetch("/api/usersprojects");
             const data = await response.json();
@@ -69,6 +77,17 @@ export default function Dashboard() {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await axios.post("/api/logout");
+            setLogstate(false);
+            setUser(null);
+            router.push("/login");
+        } catch (error) {
+            console.error("Error logging out:", error);
+        }
+    };
+
     const openRenameModal = (project) => {
         setRenameProjectId(project.projectId);
         setRenameProjectName(project.name);
@@ -77,7 +96,8 @@ export default function Dashboard() {
     };
 
     return (
-        <>
+        <AuthGuard requireAuth={true}>
+            <>
             {/* Backdrop */}
             {(addState || renameState) && (
                 <div className="fixed inset-0  bg-opacity-50 z-40" />
@@ -179,49 +199,52 @@ export default function Dashboard() {
             )}
 
             {/* Dashboard Layout */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white min-h-screen">
-                <div className="container mx-auto px-6 py-8">
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white min-h-screen overflow-x-hidden">
+                <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold mb-2">My Projects</h1>
-                            <p className="text-gray-400">Manage your question paper projects</p>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
+                        <div className="flex-1">
+                            <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Projects</h1>
+                            <p className="text-gray-400 text-sm sm:text-base">Manage your question paper projects</p>
+                            {user && <p className="text-gray-300 text-xs sm:text-sm mt-1">Welcome, {user.email}</p>}
                         </div>
-                        <button
-                            onClick={() => setAddState(true)}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                        <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
+                            <button
+                                onClick={() => setAddState(true)}
+                                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 flex-1 sm:flex-none text-sm sm:text-base"
                             >
-                                <path d="M5 12h14" />
-                                <path d="M12 5v14" />
-                            </svg>
-                            New Project
-                        </button>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M5 12h14" />
+                                    <path d="M12 5v14" />
+                                </svg>
+                                New Project
+                            </button>
+                        </div>
                     </div>
 
                     {/* Projects Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pb-8">
                         {projects.map((project) => (
                             <div
                                 key={project.projectId}
-                                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-all duration-200 group"
+                                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 sm:p-6 hover:bg-white/15 transition-all duration-200 group will-change-transform"
                             >
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-semibold text-white truncate mb-1 w-[150]">
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-base sm:text-lg font-semibold text-white truncate mb-1">
                                             {project.name}
                                         </h3>
-                                        <p className="text-gray-400 text-sm">
+                                        <p className="text-gray-400 text-xs sm:text-sm">
                                             Created {new Date().toLocaleDateString()}
                                         </p>
                                     </div>
@@ -270,7 +293,10 @@ export default function Dashboard() {
                                     <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
                                         Active
                                     </span>
-                                    <button className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer" onClick={()=>{location.href=`/question-paper/edit/${project.projectId}`}}>
+                                    <button 
+                                        className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer" 
+                                        onClick={() => goToProject(project.projectId)}
+                                    >
                                         Open →
                                     </button>
                                 </div>
@@ -292,5 +318,6 @@ export default function Dashboard() {
                 </div>
             </div>
         </>
+        </AuthGuard>
     );
 }

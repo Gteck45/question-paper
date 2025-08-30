@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { connectDB } from "../../../../lib/mongoose";
 import User from "../../../../models/User";
@@ -100,41 +100,48 @@ export async function PUT(request) {
 
     try {
         await connectDB();
-        // This is the ID of the logged-in user from the token
-        const { _id: loggedInUserId } = jwt.verify(authToken.value, process.env.JWT_SECRET);
-
-        // This is the ID of the document we want to edit from the URL
-        const projectId = request.nextUrl.searchParams.get("projectId");
-
-        const { content } = await request.json();
+        const { _id } = jwt.verify(authToken.value, process.env.JWT_SECRET);
+        const { projectId, projectName, content } = await request.json();
 
         if (!projectId) {
             return NextResponse.json({ message: "Project ID is required" }, { status: 400 });
         }
-        if (!content) {
-            return NextResponse.json({ message: "Content is required" }, { status: 400 });
+
+        // If renaming project
+        if (projectName) {
+            const user = await User.findOneAndUpdate(
+                { _id, "projects.projectId": projectId },
+                { $set: { "projects.$.name": projectName } },
+                { new: true }
+            ).select("projects");
+
+            if (!user) {
+                return NextResponse.json({ message: "Project not found" }, { status: 404 });
+            }
+
+            return NextResponse.json(user.projects);
         }
 
-        // 2. Use the new UserProject model to find and update
-        const updatedProject = await UserProject.findOneAndUpdate(
-            // 3. Find the project by its ID AND make sure it belongs to the logged-in user
-            { _id: projectId, userId: loggedInUserId },
-            // 4. Set the top-level 'content' field with the new data
-            { $set: { content: content } },
-            { new: true } // Return the updated document
-        );
+        // If updating content
+        if (content) {
+            const updatedProject = await UserProject.findOneAndUpdate(
+                { _id: projectId, userId: _id },
+                { $set: { content: content } },
+                { new: true }
+            );
 
-        if (!updatedProject) {
-            // This error means either the project doesn't exist OR the user doesn't have permission to edit it
-            return NextResponse.json({ message: "Project not found or user unauthorized" }, { status: 404 });
+            if (!updatedProject) {
+                return NextResponse.json({ message: "Project not found or user unauthorized" }, { status: 404 });
+            }
+
+            return NextResponse.json({ message: "Project saved successfully!", data: updatedProject }, { status: 200 });
         }
 
-        return NextResponse.json({ message: "Project saved successfully!", data: updatedProject }, { status: 200 });
+        return NextResponse.json({ message: "No valid operation provided" }, { status: 400 });
 
     } catch (error) {
         console.error("Error updating project:", error);
 
-        // Check for specific Mongoose CastError (invalid ObjectId format)
         if (error.name === 'CastError') {
             return NextResponse.json({ message: `Invalid Project ID format: ${error.value}` }, { status: 400 });
         }

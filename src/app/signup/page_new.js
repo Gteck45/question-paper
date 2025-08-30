@@ -1,9 +1,6 @@
 ﻿"use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { useAuth } from "../store/authContext"
-import { useNavigation } from "../store/navigationContext"
-import AuthGuard from "../component/AuthGuard"
 import { useRouter } from "next/navigation"
 
 export default function Signup() {
@@ -13,8 +10,6 @@ export default function Signup() {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordStrength, setPasswordStrength] = useState(0)
-    const { signup, redirectIfAuthenticated } = useAuth()
-    const { goToDashboard } = useNavigation()
     const router = useRouter()
 
     const handleedit = (e) => {
@@ -76,15 +71,23 @@ export default function Signup() {
         }
 
         try {
-            const result = await signup({ 
-                email: logform.email, 
-                password: logform.password 
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email: logform.email, 
+                    password: logform.password 
+                }),
             })
+
+            const data = await response.json()
             
-            if (result.success) {
-                goToDashboard()
+            if (response.ok) {
+                router.push('/dashboard')
             } else {
-                setError(result.message || 'Signup failed')
+                setError(data.message || 'Signup failed')
             }
         } catch (err) {
             setError('Network error. Please try again.')
@@ -97,13 +100,8 @@ export default function Signup() {
         window.location.href = "/api/auth/google"
     }
 
-    useEffect(() => {
-        // This is now handled by AuthGuard
-    }, [])
-
     return (
-        <AuthGuard redirectIfAuth={true}>
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 flex items-center justify-center p-4">
             {/* Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -left-40 w-80 h-80 bg-green-500/10 rounded-full blur-3xl"></div>
@@ -375,6 +373,5 @@ export default function Signup() {
                 </div>
             </div>
         </div>
-        </AuthGuard>
     )
 }

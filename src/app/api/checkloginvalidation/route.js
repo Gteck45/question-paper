@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { connectDB } from "../../../../lib/mongoose";
 import User from "../../../../models/User";
@@ -31,7 +31,7 @@ export async function GET(req) {
         }
 
         return NextResponse.json(
-            { message: "User is valid" },
+            { message: "User is valid", user: { _id: user._id, email: user.email } },
             { status: 200 }
         );
     } catch (error) {

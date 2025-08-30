@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -36,3 +36,5 @@ const AllProvider = ({ children }) => {
 
 export default AllProvider;
 export const useAll = () => useContext(AllContext);
+
+
