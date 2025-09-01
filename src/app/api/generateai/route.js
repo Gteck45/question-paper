@@ -986,19 +986,37 @@ Based on the current document context, I will consider:
           - When user says "current document" they mean the active version the frontend is displaying
 
           📋 YOUR RESPONSE FORMAT:
-          Always return this JSON structure:
+          🚨 CRITICAL: You MUST return ONLY valid JSON. No markdown, no explanations, no extra text.
+          
+          Always return this EXACT JSON structure:
           \`\`\`
           {
             "answer": "Brief description of what you did",
-            "questionPaperForUser": "JSON string of the COMPLETE project structure"
+            "questionPaperForUser": "VALID JSON STRING of the COMPLETE project structure"
           }
           \`\`\`
+
+          ⚠️ JSON FORMATTING REQUIREMENTS:
+          - The "questionPaperForUser" field MUST contain a valid JSON string
+          - Properly escape all quotes inside the JSON string using backslashes: \\"
+          - Ensure all brackets and braces are balanced
+          - No trailing commas before closing brackets/braces
+          - All string values must be properly quoted
+          - All property names must be quoted
+          - Use double quotes only, never single quotes
+          - Numbers should not be quoted
+          - Boolean values (true/false) should not be quoted
+          
+          🔧 JSON STRING EXAMPLE:
+          If your data structure is: {"name": "John's Course"}
+          Then in the response it should be: "{\\"name\\": \\"John's Course\\"}"
 
           🛠️ OPERATION RULES:
 
           **FOR EDITING CURRENT DOCUMENT (Direct Commands)**:
           - Modify ONLY the active document in the content array at \`activeContentIndex\`.
           - Keep ALL other versions unchanged.
+          - if user say  to change a single edit make a single change but return full json.
           - Return the complete structure with ALL content[] items.
 
           **FOR CREATING NEW VERSIONS (Indirect Commands)**:
@@ -1059,7 +1077,7 @@ Based on the current document context, I will consider:
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-pro",
       systemInstruction: systemInstruction
     });
 
@@ -1329,61 +1347,120 @@ Based on the current document context, I will consider:
         console.log("Parse error:", e1.message);
 
         try {
-          // Remove any trailing commas before closing brackets/braces
+          // Enhanced cleaning for common JSON issues
           let cleaned = jsonStr
-            .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
-            .replace(/([}\]]),(\s*[}\]])/g, '$1$2')  // Remove commas before closing brackets
-            .replace(/,(\s*,)/g, ',')  // Remove duplicate commas
+            // Remove trailing commas before closing brackets/braces
+            .replace(/,(\s*[}\]])/g, '$1')
+            // Remove commas before closing brackets  
+            .replace(/([}\]]),(\s*[}\]])/g, '$1$2')
+            // Remove duplicate commas
+            .replace(/,(\s*,)/g, ',')
+            // Fix missing commas between array elements
+            .replace(/}(\s*){/g, '},{')
+            // Fix missing commas between object properties
+            .replace(/}(\s*)"(\w+)":/g, '},"$2":')
+            // Fix missing commas in arrays
+            .replace(/](\s*)[{\["]/g, '],$1[')
+            // Ensure proper string escaping
+            .replace(/([^\\])"/g, '$1\\"')
+            .replace(/^"/g, '\\"')
+            // Fix unescaped quotes in strings
+            .replace(/"([^"]*)"([^"]*)"([^"]*)":/g, '"$1\\"$2\\"$3":')
             .trim();
 
-          console.log("After basic cleaning, first 200 chars:", cleaned.substring(0, 200));
+          console.log("After enhanced cleaning, first 200 chars:", cleaned.substring(0, 200));
           return JSON.parse(cleaned);
         } catch (e2) {
-          console.log("Second parse failed, attempting more aggressive cleaning...");
+          console.log("Enhanced cleaning failed, attempting bracket balancing...");
           console.log("Parse error:", e2.message);
 
           try {
-            // More aggressive cleaning - fix common JSON issues
-            let aggressiveCleaned = jsonStr
-              .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
-              .replace(/([}\]]),(\s*[}\]])/g, '$1$2')  // Remove commas before closing brackets
-              .replace(/,(\s*,)/g, ',')  // Remove duplicate commas
-              .replace(/([^"\\])(\w+):/g, '$1"$2":')  // Quote unquoted property names
-              .replace(/'/g, '"')  // Replace single quotes with double quotes
-              .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2')  // Escape unescaped backslashes
-              .replace(/\s+/g, ' ')  // Normalize whitespace
-              .trim();
+            // Check and fix bracket balancing
+            let balanced = jsonStr;
+            
+            // Count brackets to ensure they're balanced
+            const openBraces = (balanced.match(/{/g) || []).length;
+            const closeBraces = (balanced.match(/}/g) || []).length;
+            const openBrackets = (balanced.match(/\[/g) || []).length;
+            const closeBrackets = (balanced.match(/]/g) || []).length;
 
-            console.log("After aggressive cleaning, first 200 chars:", aggressiveCleaned.substring(0, 200));
-            return JSON.parse(aggressiveCleaned);
-          } catch (e3) {
-            console.error("All JSON cleaning attempts failed:", e3.message);
+            console.log("Bracket counts:", { openBraces, closeBraces, openBrackets, closeBrackets });
 
-            // Last resort: try to extract valid JSON using regex
-            try {
-              console.log("Attempting regex extraction...");
+            // Add missing closing brackets
+            const missingCloseBraces = openBraces - closeBraces;
+            const missingCloseBrackets = openBrackets - closeBrackets;
 
-              // Look for the main JSON structure - more flexible pattern
-              const jsonMatch = jsonStr.match(/(\{[\s\S]*\})/);
-              if (jsonMatch) {
-                const extracted = jsonMatch[1];
-
-                // Try to fix the extracted JSON
-                const finalCleaned = extracted
-                  .replace(/,(\s*[}\]])/g, '$1')
-                  .replace(/,(\s*,)/g, ',')
-                  .replace(/([^"\\])(\w+):/g, '$1"$2":')
-                  .replace(/'/g, '"')
-                  .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2');
-
-                console.log("Final cleaned JSON first 200 chars:", finalCleaned.substring(0, 200));
-                return JSON.parse(finalCleaned);
-              }
-            } catch (e4) {
-              console.error("Regex extraction also failed:", e4.message);
+            if (missingCloseBraces > 0) {
+              balanced += '}' .repeat(missingCloseBraces);
+              console.log(`Added ${missingCloseBraces} missing closing braces`);
             }
 
-            throw new Error(`Invalid JSON structure: ${e3.message}`);
+            if (missingCloseBrackets > 0) {
+              balanced += ']'.repeat(missingCloseBrackets);
+              console.log(`Added ${missingCloseBrackets} missing closing brackets`);
+            }
+
+            // Remove trailing commas and clean up
+            const finalCleaned = balanced
+              .replace(/,(\s*[}\]])/g, '$1')
+              .replace(/,(\s*,)/g, ',')
+              .trim();
+
+            console.log("After bracket balancing, first 200 chars:", finalCleaned.substring(0, 200));
+            return JSON.parse(finalCleaned);
+          } catch (e3) {
+            console.error("Bracket balancing failed:", e3.message);
+
+            // Last resort: Extract content array specifically and rebuild minimal structure
+            try {
+              console.log("Attempting content extraction and rebuild...");
+
+              // Try to extract the content array specifically
+              const contentMatch = jsonStr.match(/"content"\s*:\s*\[.*?\]/);
+              if (contentMatch) {
+                const contentStr = contentMatch[0];
+                console.log("Found content string:", contentStr.substring(0, 100) + "...");
+                
+                // Create a minimal valid structure with extracted content
+                const minimalStructure = {
+                  _id: "temp_generated_id",
+                  userId: "temp_user_id", 
+                  content: [],
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  __v: 0
+                };
+
+                // Try to parse just the content part
+                try {
+                  const contentValue = contentStr.replace('"content":', '').trim();
+                  minimalStructure.content = JSON.parse(contentValue);
+                } catch (contentParseError) {
+                  console.log("Content parsing failed, creating default structure");
+                  minimalStructure.content = [{
+                    headers: [
+                      { courseName: "Generated Question Paper", styles: [] },
+                      { examinationType: "Examination", styles: [] },
+                      { semesterYear: new Date().getFullYear().toString(), styles: [] },
+                      { subjectName: "General Subject", styles: [] },
+                      { totalMarks: 100, styles: [] },
+                      { time: "3 hours", styles: [] },
+                      { notes: "Answer all questions", styles: [] },
+                      { subjectCode: "AUTO-GEN", styles: [] }
+                    ],
+                    questions: []
+                  }];
+                }
+
+                console.log("Content extraction and rebuild succeeded");
+                return minimalStructure;
+              }
+
+              throw new Error("Could not extract content from malformed JSON");
+            } catch (e4) {
+              console.error("Content extraction also failed:", e4.message);
+              throw new Error(`All JSON repair attempts failed: ${e4.message}`);
+            }
           }
         }
       }

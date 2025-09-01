@@ -117,7 +117,7 @@ export default function Login() {
                         <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20">
                             <div className="text-center mb-8">
                                 <h1 className="text-3xl font-bold text-white mb-2">Sign In</h1>
-                                <p className="text-gray-300">Welcome back! Let's build students' future together</p>
+                                <p className="text-gray-300">Welcome back! Let&apos;s build students&apos; future together</p>
                             </div>
 
                             <form onSubmit={submit} className="space-y-6">
@@ -182,9 +182,13 @@ export default function Login() {
 
                                 {/* Forgot Password */}
                                 <div className="flex justify-end">
-                                    <Link href="#" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push("/forgot-password")}
+                                        className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                                    >
                                         Forgot your password?
-                                    </Link>
+                                    </button>
                                 </div>
 
                                 {/* Login Button */}
@@ -236,7 +240,7 @@ export default function Login() {
                             {/* Sign Up Link */}
                             <div className="mt-8 text-center">
                                 <p className="text-gray-300">
-                                    Don't have an account?{" "}
+                                    Don&apos;t have an account?{" "}
                                     <Link 
                                         href="/signup" 
                                         className="text-blue-400 hover:text-blue-300 font-semibold transition-colors hover:underline"
