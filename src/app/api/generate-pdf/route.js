@@ -25,7 +25,10 @@ export async function POST(request) {
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor',
         '--font-render-hinting=none',
-        '--disable-font-subpixel-positioning'
+        '--disable-font-subpixel-positioning',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--font-render-hinting=slight'
       ]
     });
     
@@ -37,17 +40,45 @@ export async function POST(request) {
     // Add CSS to ensure proper font loading and fallbacks
     const fontCSS = `
       <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
         * {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
+        
         body {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
+          font-weight: 400;
+          line-height: 1.5;
         }
+        
+        h1, h2, h3, h4, h5, h6 {
+          font-family: 'Roboto', Arial, sans-serif !important;
+          font-weight: 500;
+        }
+        
+        .font-bold {
+          font-weight: 700 !important;
+        }
+        
+        .font-medium {
+          font-weight: 500 !important;
+        }
+        
         @media print {
           * {
-            font-family: Arial, Helvetica, sans-serif !important;
+            font-family: 'Roboto', Arial, Helvetica, sans-serif !important;
             -webkit-print-color-adjust: exact;
             color-adjust: exact;
+            font-rendering: optimizeLegibility;
+            text-rendering: optimizeLegibility;
+          }
+          
+          body {
+            font-size: 12pt !important;
+            line-height: 1.4 !important;
           }
         }
       </style>
@@ -59,8 +90,26 @@ export async function POST(request) {
       : `<!DOCTYPE html><html><head>${fontCSS}</head><body>${htmlContent}</body></html>`;
     
     await page.setContent(finalHtmlContent, { 
-      waitUntil: 'networkidle0',
-      timeout: 30000
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 60000
+    });
+    
+    // Wait for Google Fonts to load
+    await page.evaluateOnNewDocument(() => {
+      window.addEventListener('DOMContentLoaded', () => {
+        const link = document.createElement('link');
+        link.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      });
+    });
+    
+    // Ensure fonts are loaded before PDF generation
+    await page.waitForFunction(
+      () => document.fonts.ready.then(() => true),
+      { timeout: 30000 }
+    ).catch(() => {
+      console.log('Font loading timeout, proceeding with fallback fonts');
     });
     
     // Enhanced format mapping with orientation support
@@ -125,12 +174,7 @@ export async function POST(request) {
     const qualityConfig = qualitySettings[quality] || qualitySettings['high'];
     
     // Enhanced PDF configuration for better layout and sizing
-    await page.waitForFunction('document.fonts.ready');
-    
-    // Wait for any lazy-loaded fonts
-    await page.evaluate(() => {
-      return document.fonts.ready;
-    });
+    await page.waitForTimeout(2000); // Give fonts time to load
     
     const pdfBuffer = await page.pdf({
       ...formatConfig,
@@ -145,17 +189,20 @@ export async function POST(request) {
       // Ensure consistent rendering across different devices
       preferCSSPageSize: true,
       // Generate PDF with embedded fonts
-      generateDocumentOutline: true,
+      generateDocumentOutline: false,
       // Apply quality settings
       scale: qualityConfig.scale,
       // Handle page breaks properly
       pageRanges: '',
       // Tagged PDF for accessibility
-      tagged: true,
+      tagged: false,
       // Enable outline
-      outline: true,
+      outline: false,
       // Force font rendering
-      omitBackground: false
+      omitBackground: false,
+      // Additional font rendering options
+      displayHeaderFooter: false,
+      format: formatConfig.format || undefined
     });
 
     await browser.close();
