@@ -5,6 +5,7 @@ import { useAuth } from "../store/authContext";
 import { useNavigation } from "../store/navigationContext";
 import AuthGuard from "../component/AuthGuard";
 import { useRouter } from "next/navigation";
+import { authenticatedFetch, getAuthAxiosConfig } from "../../../lib/authUtils";
 
 export default function Dashboard() {
     const [projects, setProjects] = useState([]);
@@ -22,7 +23,7 @@ export default function Dashboard() {
         // Auth is handled by AuthGuard, just fetch projects
         const fetchProjects = async () => {
             try {
-                const response = await fetch("/api/usersprojects");
+                const response = await authenticatedFetch("/api/usersprojects");
                 const data = await response.json();
                 // Ensure data is an array
                 setProjects(Array.isArray(data) ? data : []);
@@ -49,14 +50,11 @@ export default function Dashboard() {
     const handleDelete = async (projectId, projectName) => {
         if (confirm(`Are you sure you want to delete "${projectName}"?`)) {
             try {
-                const response = await axios.delete(`/api/usersprojects`, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                const response = await axios.delete(`/api/usersprojects`, getAuthAxiosConfig({
                     data: {
                         projectId: projectId
                     }
-                });
+                }));
                 setProjects(response.data);
                 setOpenMenu(null);
             } catch (error) {
@@ -71,7 +69,7 @@ export default function Dashboard() {
             const response = await axios.put(`/api/usersprojects`, {
                 projectId: renameProjectId,
                 projectName: renameProjectName
-            });
+            }, getAuthAxiosConfig());
             setProjects(response.data);
             setRenameState(false);
             setRenameProjectId(null);
@@ -141,7 +139,7 @@ export default function Dashboard() {
                                     try {
                                         const response = await axios.post("/api/usersprojects", {
                                             projectName: newProjectName,
-                                        });
+                                        }, getAuthAxiosConfig());
                                         setProjects(response.data);
                                         setNewProjectName("");
                                         setAddState(false);

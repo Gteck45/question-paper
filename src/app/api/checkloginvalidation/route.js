@@ -5,11 +5,16 @@ import User from "../../../../models/User";
 import { cookies } from "next/headers";
 
 export async function GET(req) {
-
     const cookieStore = await cookies();
     const authToken = cookieStore.get("auth");
+    
+    // Also check for Authorization header
+    const authHeader = req.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    
+    const token = authToken?.value || bearerToken;
 
-    if (!authToken) {
+    if (!token) {
         return NextResponse.json(
             { message: "No token provided" },
             { status: 401 }
@@ -17,8 +22,7 @@ export async function GET(req) {
     }
 
     try {
-
-        const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         await connectDB();
         const user = await User.findById(decoded._id);

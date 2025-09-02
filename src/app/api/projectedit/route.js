@@ -8,8 +8,14 @@ import UserProject from "../../../../models/UserProjects";
 export async function GET(request) {
     const cookieStore = await cookies();
     const authToken = cookieStore.get("auth");
+    
+    // Also check for Authorization header
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    
+    const token = authToken?.value || bearerToken;
 
-    if (!authToken) {
+    if (!token) {
         return NextResponse.json({ message: "No token provided" }, { status: 401 });
     }
 
@@ -21,7 +27,7 @@ export async function GET(request) {
         if (!projectId || typeof projectId !== "string") {
             return NextResponse.json({ message: "Project ID is required" }, { status: 400 });
         }
-        const { _id } = jwt.verify(authToken.value, process.env.JWT_SECRET);
+        const { _id } = jwt.verify(token, process.env.JWT_SECRET);
 
         const user = await User.findById(_id);
         if (!user) {
@@ -42,8 +48,14 @@ export async function GET(request) {
 export async function PUT(request) {
     const cookieStore = await cookies();
     const authToken = cookieStore.get("auth");
+    
+    // Also check for Authorization header
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    
+    const token = authToken?.value || bearerToken;
 
-    if (!authToken) {
+    if (!token) {
         return NextResponse.json({ message: "No token provided" }, { status: 401 });
     }
 
@@ -55,7 +67,7 @@ export async function PUT(request) {
         if (!projectId || typeof projectId !== "string") {
             return NextResponse.json({ message: "Project ID is required" }, { status: 400 });
         }
-        const { _id } = jwt.verify(authToken.value, process.env.JWT_SECRET);
+        const { _id } = jwt.verify(token, process.env.JWT_SECRET);
         const { content } = await request.json();
 
         if (!content) {
