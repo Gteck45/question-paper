@@ -9,6 +9,7 @@ import AuthGuard from "../../../component/AuthGuard";
 import '../ai-chat.css'; // Import custom styles for AI chat
 import { useAuth } from "../../../store/authContext";
 import { useNavigation } from "../../../store/navigationContext";
+import { authFetch } from "../../../../../lib/api";
 
 // --- SVG Icons for Buttons ---
 const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>;
@@ -129,7 +130,7 @@ export default function EditProjectPage() {
         const fetchProjectData = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch(`/api/projectedit/${projectId}`);
+                const response = await authFetch(`/api/projectedit/${projectId}`);
                 if (!response.ok) throw new Error('Failed to fetch project data.');
 
                 const data = await response.json();
@@ -159,7 +160,7 @@ export default function EditProjectPage() {
         const saveProject = async () => {
             if (!fullProjectData) return;
             
-            const response = await fetch(`/api/usersprojects`, {
+            const response = await authFetch(`/api/usersprojects`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ projectId, content: fullProjectData.content })
@@ -371,7 +372,7 @@ export default function EditProjectPage() {
         setIsSaving(true);
         const loadingToast = toast.loading('Saving project...');
         try {
-            const response = await fetch(`/api/usersprojects`, {
+            const response = await authFetch(`/api/usersprojects`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ projectId, content: fullProjectData.content })

@@ -43,33 +43,36 @@ export const AuthProvider = ({ children }) => {
                 }
             }
 
-            // Validate with server
-            try {
-                const response = await authFetch('/api/checkloginvalidation');
+            // Validate with server only if we have a token
+            if (storedToken) {
+                try {
+                    const response = await authFetch('/api/checkloginvalidation');
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.user) {
-                        // Server confirms user is valid
-                        setUser(data.user);
-                        setIsLoggedIn(true);
-                        
-                        // Update localStorage with latest user data
-                        localStorage.setItem('user', JSON.stringify(data.user));
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.user) {
+                            // Server confirms user is valid
+                            setUser(data.user);
+                            setIsLoggedIn(true);
+                            
+                            // Update localStorage with latest user data
+                            localStorage.setItem('user', JSON.stringify(data.user));
+                        } else {
+                            // Server says user is not valid
+                            clearAuthState();
+                        }
                     } else {
-                        // Server says user is not valid
+                        // Server request failed, clear auth state
                         clearAuthState();
                     }
-                } else {
-                    // Server request failed, clear auth state
+                } catch (error) {
+                    console.error('Auth validation error:', error);
+                    // On network error, clear auth state to prevent loops
                     clearAuthState();
                 }
-            } catch (error) {
-                console.error('Auth validation error:', error);
-                // On network error, keep localStorage state but set a flag
-                if (!storedToken) {
-                    clearAuthState();
-                }
+            } else {
+                // No token, ensure state is clear
+                clearAuthState();
             }
         } catch (error) {
             console.error('Auth initialization error:', error);
