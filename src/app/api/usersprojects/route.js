@@ -22,7 +22,9 @@ export async function GET() {
             return NextResponse.json({ message: "User not found" }, { status: 404 });
         }
 
-        return NextResponse.json(user.projects);
+        // Ensure projects is always an array
+        const projects = Array.isArray(user.projects) ? user.projects : [];
+        return NextResponse.json(projects);
     } catch (error) {
         return NextResponse.json({ message: "Error fetching projects" }, { status: 500 });
     }
@@ -52,6 +54,7 @@ export async function POST(request) {
                     headers: [
                         { courseName: "", styles: [] },
                         { examinationType: "", styles: [] },
+                          { InstuteName: "", styles: [] },
                         { semesterYear: "", styles: [] },
                         { subjectName: "", styles: [] },
                         { totalMarks: 0, styles: [] },

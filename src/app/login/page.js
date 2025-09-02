@@ -30,7 +30,11 @@ export default function Login() {
         try {
             const result = await login(logform)
             if (result.success) {
-                goToDashboard()
+                setMessage("Login successful! Redirecting...")
+                // Force redirect after successful login
+                setTimeout(() => {
+                    goToDashboard()
+                }, 500)
             } else {
                 setMessage(result.message)
             }

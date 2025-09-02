@@ -70,6 +70,7 @@ const PreviewPanel = memo(React.forwardRef(({ projectData }, ref) => {
         const [
             courseName = {},
             examinationType = {},
+            InstuteName = {},
             semesterYear = {},
             subjectName = {},
             totalMarks = {},
@@ -83,6 +84,7 @@ const PreviewPanel = memo(React.forwardRef(({ projectData }, ref) => {
             headers: {
                 courseName,
                 examinationType,
+                InstuteName,
                 semesterYear,
                 subjectName,
                 totalMarks,
@@ -136,6 +138,9 @@ const PreviewPanel = memo(React.forwardRef(({ projectData }, ref) => {
 
                 {/* Centered institution/exam details */}
                 <div className="text-center space-y-2 my-6">
+                    <h1 className={`${headers.InstuteName.styles?.join(' ')} leading-tight`}>
+                        {headers.InstuteName.InstuteName}
+                    </h1>
                     <h1 className={`${headers.courseName.styles?.join(' ')} leading-tight`}>
                         {headers.courseName.courseName}
                     </h1>

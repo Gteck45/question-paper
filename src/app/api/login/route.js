@@ -44,7 +44,20 @@ export async function POST(req) {
             return NextResponse.json({ message: "Invalid email or password" }, { status: 400 })
         }
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" })
-        const response = NextResponse.json({ message: "Login successful", token: token }, { status: 200 })
+        
+        // Return user data without password
+        const userData = {
+            _id: user._id,
+            email: user.email,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        }
+        
+        const response = NextResponse.json({ 
+            message: "Login successful", 
+            token: token, 
+            user: userData 
+        }, { status: 200 })
         response.cookies.set("auth", token, {
             httpOnly: true,
             sameSite: "strict",

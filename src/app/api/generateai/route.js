@@ -147,6 +147,7 @@ function generateBasicQuestionPaperTemplate(subject, totalMarks = 100) {
         "headers": [
           { "courseName": "Generated Question Paper", "styles": [] },
           { "examinationType": "Examination", "styles": [] },
+          { "InstuteName": "InstuteName", "styles": [] },
           { "semesterYear": new Date().getFullYear().toString(), "styles": [] },
           { "subjectName": subject, "styles": [] },
           { "totalMarks": totalMarks, "styles": [] },
@@ -286,18 +287,19 @@ export async function POST(req) {
 - Subject Code: ${currentDocument.headers?.[7]?.subjectCode || 'Not specified'}
 
 🔍 EXISTING QUESTIONS ANALYSIS:
-${currentDocument.questions?.length > 0 ? 
-  currentDocument.questions.map((q, idx) => {
-    const questionText = q.text ? q.text.substring(0, 100) + (q.text.length > 100 ? '...' : '') : 'No text';
-    const subQuestions = q.options?.length || 0;
-    return `${idx + 1}. "${questionText}" (${q.marks} marks, ${subQuestions} sub-questions)`;
-  }).join('\n') 
-  : 'No existing questions found'}
+${currentDocument.questions?.length > 0 ?
+          currentDocument.questions.map((q, idx) => {
+            const questionText = q.text ? q.text.substring(0, 100) + (q.text.length > 100 ? '...' : '') : 'No text';
+            const subQuestions = q.options?.length || 0;
+            return `${idx + 1}. "${questionText}" (${q.marks} marks, ${subQuestions} sub-questions)`;
+          }).join('\n')
+          : 'No existing questions found'}
 
 💡 CONTEXTUAL RECOMMENDATIONS:
 Based on the current document context, I will consider:
 - Subject-specific terminology and concepts for ${currentDocument.headers?.[3]?.subjectName || 'the subject'}
 - Appropriate difficulty level for ${currentDocument.headers?.[1]?.examinationType || 'this exam type'}
+- Appropriate difficulty level for ${currentDocument.InstuteName?.[1]?.InstuteName || 'this InstuteName type'}
 - Time allocation based on ${currentDocument.headers?.[5]?.time || 'the exam duration'}
 - Mark distribution aligned with ${currentDocument.headers?.[4]?.totalMarks || 'the total marks'}
 - Academic level appropriate for ${currentDocument.headers?.[2]?.semesterYear || 'the semester/year'}
@@ -1377,7 +1379,7 @@ Based on the current document context, I will consider:
           try {
             // Check and fix bracket balancing
             let balanced = jsonStr;
-            
+
             // Count brackets to ensure they're balanced
             const openBraces = (balanced.match(/{/g) || []).length;
             const closeBraces = (balanced.match(/}/g) || []).length;
@@ -1391,7 +1393,7 @@ Based on the current document context, I will consider:
             const missingCloseBrackets = openBrackets - closeBrackets;
 
             if (missingCloseBraces > 0) {
-              balanced += '}' .repeat(missingCloseBraces);
+              balanced += '}'.repeat(missingCloseBraces);
               console.log(`Added ${missingCloseBraces} missing closing braces`);
             }
 
@@ -1420,11 +1422,11 @@ Based on the current document context, I will consider:
               if (contentMatch) {
                 const contentStr = contentMatch[0];
                 console.log("Found content string:", contentStr.substring(0, 100) + "...");
-                
+
                 // Create a minimal valid structure with extracted content
                 const minimalStructure = {
                   _id: "temp_generated_id",
-                  userId: "temp_user_id", 
+                  userId: "temp_user_id",
                   content: [],
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),

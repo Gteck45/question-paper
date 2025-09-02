@@ -19,7 +19,20 @@ export async function POST(request) {
         const hashPassword = await bcrypt.hash(password, 10)
         const newUser = await User.create({ email, password: hashPassword })
         const token = jwt.sign({ _id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "7d" })
-        const response = NextResponse.json({ message: "User created successfully" }, { status: 201 })
+        
+        // Return user data without password
+        const userData = {
+            _id: newUser._id,
+            email: newUser.email,
+            createdAt: newUser.createdAt,
+            updatedAt: newUser.updatedAt
+        }
+        
+        const response = NextResponse.json({ 
+            message: "User created successfully", 
+            token: token, 
+            user: userData 
+        }, { status: 201 })
         response.cookies.set("auth", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",

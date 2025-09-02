@@ -21,9 +21,15 @@ export default function Dashboard() {
     useEffect(() => {
         // Auth is handled by AuthGuard, just fetch projects
         const fetchProjects = async () => {
-            const response = await fetch("/api/usersprojects");
-            const data = await response.json();
-            setProjects(data);
+            try {
+                const response = await fetch("/api/usersprojects");
+                const data = await response.json();
+                // Ensure data is an array
+                setProjects(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+                setProjects([]); // Set empty array on error
+            }
         };
 
         fetchProjects();

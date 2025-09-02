@@ -70,6 +70,7 @@ const createDefaultDocument = () => ({
     headers: [
         { courseName: "", styles: ["text-lg", "font-bold"] },
         { examinationType: "", styles: ["text-base", "font-bold"] },
+        { InstuteName: "", styles: ["text-base", "font-bold"] },
         { semesterYear: "", styles: ["text-base", "font-bold"] },
         { subjectName: "", styles: ["text-base", "font-normal"] },
         { totalMarks: "", styles: ["text-sm", "font-bold"] },
@@ -117,7 +118,8 @@ export default function EditProjectPage() {
         time: "Time Allowed (e.g., 3 hours)",
         notes: "Notes for Students",
         subjectCode: "Subject Code (e.g., CS-501)",
-        specialNumber: "Special Number / ID"
+        specialNumber: "Special Number / ID",
+        InstuteName: "Institute Name (e.g., ABC Institute)",
     };
 
     useEffect(() => {
