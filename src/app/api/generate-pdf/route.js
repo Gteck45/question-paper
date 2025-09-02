@@ -21,7 +21,11 @@ export async function POST(request) {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor',
+        '--font-render-hinting=none',
+        '--disable-font-subpixel-positioning'
       ]
     });
     
@@ -30,7 +34,31 @@ export async function POST(request) {
     // Set viewport for consistent rendering
     await page.setViewport({ width: 1200, height: 1600 });
     
-    await page.setContent(htmlContent, { 
+    // Add CSS to ensure proper font loading and fallbacks
+    const fontCSS = `
+      <style>
+        * {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        @media print {
+          * {
+            font-family: Arial, Helvetica, sans-serif !important;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
+        }
+      </style>
+    `;
+    
+    // Inject the HTML content with proper font CSS
+    const finalHtmlContent = htmlContent.includes('<head>') 
+      ? htmlContent.replace('<head>', `<head>${fontCSS}`)
+      : `<!DOCTYPE html><html><head>${fontCSS}</head><body>${htmlContent}</body></html>`;
+    
+    await page.setContent(finalHtmlContent, { 
       waitUntil: 'networkidle0',
       timeout: 30000
     });
@@ -97,6 +125,13 @@ export async function POST(request) {
     const qualityConfig = qualitySettings[quality] || qualitySettings['high'];
     
     // Enhanced PDF configuration for better layout and sizing
+    await page.waitForFunction('document.fonts.ready');
+    
+    // Wait for any lazy-loaded fonts
+    await page.evaluate(() => {
+      return document.fonts.ready;
+    });
+    
     const pdfBuffer = await page.pdf({
       ...formatConfig,
       printBackground: true,
@@ -118,7 +153,9 @@ export async function POST(request) {
       // Tagged PDF for accessibility
       tagged: true,
       // Enable outline
-      outline: true
+      outline: true,
+      // Force font rendering
+      omitBackground: false
     });
 
     await browser.close();
