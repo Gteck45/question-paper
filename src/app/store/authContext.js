@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { authenticatedFetch } from '../../../lib/authUtils';
+import { authFetch } from '../../../lib/api';
 
 const AuthContext = createContext();
 
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
 
             // Validate with server
             try {
-                const response = await authenticatedFetch('/api/checkloginvalidation');
+                const response = await authFetch('/api/checkloginvalidation');
 
                 if (response.ok) {
                     const data = await response.json();
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
     const logout = useCallback(async () => {
         try {
             // Call logout API to invalidate server session
-            await authenticatedFetch('/api/logout', {
+            await authFetch('/api/logout', {
                 method: 'POST'
             });
         } catch (error) {

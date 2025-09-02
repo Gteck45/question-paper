@@ -650,7 +650,9 @@ export default function EditProjectPage() {
                             <div className="relative w-full lg:w-auto mt-2 lg:mt-0 lg:ml-2">
                                 <button
                                     disabled={isExporting}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         // Toggle dropdown visibility on click instead of hover
                                         const dropdown = document.getElementById('export-dropdown');
                                         dropdown.classList.toggle('hidden');
@@ -664,24 +666,28 @@ export default function EditProjectPage() {
                                     className="hidden absolute top-full right-0 w-full lg:w-48 bg-zinc-700 border border-zinc-600 rounded-md shadow-lg z-20 mt-1"
                                 >
                                     <div className="p-2">
-                                        <a
-                                            onClick={() => {
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
                                                 handleExportPDF('current');
                                                 document.getElementById('export-dropdown').classList.add('hidden');
                                             }}
-                                            className="block px-3 py-2 text-xs text-white hover:bg-zinc-600 cursor-pointer rounded mb-1"
+                                            className="block px-3 py-2 text-xs text-white hover:bg-zinc-600 cursor-pointer rounded mb-1 w-full text-left bg-transparent border-none"
                                         >
                                             📄 Export Current Document
-                                        </a>
-                                        <a
-                                            onClick={() => {
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
                                                 handleExportPDF('all');
                                                 document.getElementById('export-dropdown').classList.add('hidden');
                                             }}
-                                            className="block px-3 py-2 text-xs text-white hover:bg-zinc-600 cursor-pointer rounded"
+                                            className="block px-3 py-2 text-xs text-white hover:bg-zinc-600 cursor-pointer rounded w-full text-left bg-transparent border-none"
                                         >
                                             📚 Export All Documents
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
